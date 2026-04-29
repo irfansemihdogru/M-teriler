@@ -41,7 +41,7 @@ const QUESTIONS: Question[] = [
   }
 ];
 
-type Screen = 'welcome' | 'form' | 'quiz' | 'result';
+type Screen = 'welcome' | 'form' | 'loading' | 'quiz' | 'result';
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('welcome');
@@ -60,11 +60,18 @@ export default function App() {
       timer = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
-    } else if (timeLeft === 0 && !isFinished) {
+    } else if (timeLeft === 0 && screen === 'quiz' && !isFinished) {
       handleFinish();
     }
     return () => clearInterval(timer);
   }, [screen, timeLeft, isFinished]);
+
+  const handleFormSubmit = () => {
+    setScreen('loading');
+    setTimeout(() => {
+      handleStartQuiz();
+    }, 2500);
+  };
 
   const handleStartQuiz = () => {
     setStartTime(Date.now());
@@ -92,7 +99,6 @@ export default function App() {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50 flex items-center px-6 justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white font-bold italic">A</div>
           <span className="font-bold tracking-tight text-xl">ARCA <span className="font-light text-gray-500">OTOMOTİV</span></span>
         </div>
       </header>
@@ -107,8 +113,12 @@ export default function App() {
             <FormScreen 
               userData={userData} 
               setUserData={setUserData} 
-              onNext={handleStartQuiz} 
+              onNext={handleFormSubmit} 
             />
+          )}
+
+          {screen === 'loading' && (
+            <LoadingScreen />
           )}
 
           {screen === 'quiz' && (
@@ -140,21 +150,71 @@ export default function App() {
   );
 }
 
+function LoadingScreen() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 1.1 }}
+      className="flex flex-col items-center justify-center p-12 text-center space-y-6"
+    >
+      <motion.div
+        animate={{ 
+          scale: [1, 1.2, 1],
+          rotate: [0, 10, -10, 0]
+        }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+        className="w-24 h-24 bg-black rounded-3xl flex items-center justify-center text-white"
+      >
+        <Trophy size={48} />
+      </motion.div>
+      <div className="space-y-2">
+        <motion.h2 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="text-4xl font-black italic tracking-tighter"
+        >
+          BAŞLIYORRR!
+        </motion.h2>
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="text-gray-400 font-bold uppercase tracking-[0.2em] text-sm"
+        >
+          ARCA OTOMOTİV
+        </motion.p>
+      </div>
+      <div className="w-48 h-1 bg-gray-100 rounded-full overflow-hidden mt-8">
+        <motion.div 
+          className="h-full bg-black"
+          initial={{ width: 0 }}
+          animate={{ width: "100%" }}
+          transition={{ duration: 2, ease: "easeInOut" }}
+        />
+      </div>
+    </motion.div>
+  );
+}
+
 function WelcomeScreen({ onNext }: { onNext: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="bg-white rounded-3xl p-8 shadow-xl shadow-black/5 border border-gray-100"
+      className="bg-white rounded-3xl p-8 shadow-xl shadow-black/5 border border-gray-100 text-center"
     >
-      <div className="w-16 h-16 bg-black/5 rounded-2xl flex items-center justify-center mb-6 text-black">
-        <Trophy size={32} />
+      <p className="text-gray-400 font-bold text-xs tracking-widest uppercase mb-2">ARCA OTOMOTİV</p>
+      <div className="flex items-center justify-center gap-4 mb-6">
+        <Trophy size={28} className="text-amber-500" />
+        <h1 className="text-2xl font-extrabold tracking-tight leading-tight">
+          Kaan Sekban<br />Bilgi Yarışması
+        </h1>
+        <Trophy size={28} className="text-amber-500" />
       </div>
-      <h1 className="text-3xl font-extrabold mb-4 tracking-tight leading-none">
-        Kaan Sekban Bilgi Yarışması
-      </h1>
-      <p className="text-gray-600 mb-8 leading-relaxed">
+      <p className="text-gray-600 mb-8 leading-relaxed max-w-sm mx-auto">
         Arca Otomotiv çalışanlarına özel bu yarışmada, Kaan Sekban hakkındaki bilgini test et!
       </p>
 
